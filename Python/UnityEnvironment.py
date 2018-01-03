@@ -31,7 +31,7 @@ class UnityEnvironment(object):
             self.close()
             raise socket.error("Couldn't launch new environment because worker number {} is still in use. "
                                "You may need to manually close a previously opened environment "
-                               "or use a different worker number.".format(str(worker_id)))
+                               "or use a different worker number.".format(self.port))
 
     def _listening(self):
         try:
