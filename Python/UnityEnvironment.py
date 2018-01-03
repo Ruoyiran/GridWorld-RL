@@ -2,12 +2,17 @@
 @version: 1.0
 @author: royran
 @contact: iranpeng@gmail.com
-@file: Server.py
+@file: UnityEnvironment.py
 @time: 2018/1/2 12:12
 '''
 import sys
 import atexit
 import socket
+import struct
+from PIL import Image
+import io
+import numpy as np
+import cv2 as cv
 
 CMD_EXIT  = "EXIT"
 CMD_STEP  = "STEP"
@@ -62,14 +67,52 @@ class UnityEnvironment(object):
             self._socket.close()
             self._socket = None
 
+    def recv_bytes(self):
+        try:
+            s = self._conn.recv(self._buffer_size)
+            data_length = struct.unpack("I", bytearray(s[:4]))[0]
+            s = s[4:]
+            while len(s) != data_length:
+                s += self._conn.recv(self._buffer_size)
+        except Exception as ex:
+            raise ex
+        return s
+
+    def send_action(self):
+        """
+        Send dictionary of actions, memories, and value estimates over socket.
+        :param action: a dictionary of lists of actions.
+        :param memory: a dictionary of lists of of memories.
+        :param value: a dictionary of lists of of value estimates.
+        """
+        try:
+            self._conn.recv(self._buffer_size)
+        except Exception as ex:
+            raise ex
+        # action_message = {"action": action, "memory": memory, "value": value}
+        self._conn.send("1".encode('utf-8'))
+
+def process_pixels(image_bytes=None):
+    s = bytearray(image_bytes)
+    image = Image.open(io.BytesIO(s))
+    return np.array(image)
+
 if __name__ == '__main__':
     env = UnityEnvironment()
     flag = False
-    while True:
-        if flag:
-            env.send(CMD_STEP)
-        else:
-            env.send(CMD_RESET)
-        data = env.recv()
-        print("Recv: " + data)
-        flag = not flag
+    env.send(CMD_STEP)
+    env.send_action()
+    data = env.recv_bytes()
+    img_data = process_pixels(data)
+    print("Recv image, shape:", img_data.shape)
+    # while True:
+    #     if flag:
+    #         env.send(CMD_RESET)
+    #         data = env.recv()
+    #         print("Recv:", data)
+    #     else:
+    #         env.send(CMD_STEP)
+    #         data = env.recv_bytes()
+    #         img_data = process_pixels(data)
+    #         print("Recv image, shape:", img_data.shape)
+    #     flag = not flag
