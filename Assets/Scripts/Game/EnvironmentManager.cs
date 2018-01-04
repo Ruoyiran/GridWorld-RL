@@ -15,7 +15,7 @@ public class EnvironmentManager : MonoBehaviour {
         InitEnvironmentObjects();
         SetEnvironment();
     }
-
+    
     private void InitEnvironmentObjects()
     {
         _planeObj = CTool.FindGameObject(gameObject, "Plane");

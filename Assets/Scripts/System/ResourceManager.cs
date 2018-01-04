@@ -6,7 +6,7 @@ public class ResourceManager : Singleton<ResourceManager>
 {
     private Dictionary<string, GameObject> _gameObjPool = new Dictionary<string, GameObject>();
 
-    public GameObject LoadPrefab(string path, string name = null)
+    public GameObject InstantiateGameObjectFromPath(string path, string name = null)
     {
         if (string.IsNullOrEmpty(path))
         {

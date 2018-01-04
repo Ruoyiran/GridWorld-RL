@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class CTool : MonoBehaviour {
+public class CTool {
 
     public static GameObject FindGameObject(GameObject parentObj, string path)
     {
@@ -20,5 +20,16 @@ public class CTool : MonoBehaviour {
         if(comp == null)
             comp = obj.AddComponent<T>();
         return comp;
+    }
+
+    public static GameObject CreateEmptyGameObject(string name = null)
+    {
+        GameObject obj = new GameObject();
+        if (!string.IsNullOrEmpty(name))
+            obj.name = name;
+        obj.transform.position = Vector3.zero;
+        obj.transform.localScale = Vector3.one;
+        obj.transform.rotation = Quaternion.identity;
+        return obj;
     }
 }

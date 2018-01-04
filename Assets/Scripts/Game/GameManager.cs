@@ -1,22 +1,39 @@
 ﻿using Utils;
 using UnityEngine;
+using System.Collections.Generic;
 
 public class GameManager : SingletonMono<GameManager>
 {
     private const string ENVIRONMENT_PREFAB_PATH = "Prefabs/Environment";
     private const string AGENT_PREFAB_PATH = "Prefabs/Agent";
+    private const string OBSTACLE_PREFAB_PATH = "Prefabs/Pit";
+    private const string GOAL_PREFAB_PATH = "Prefabs/Goal";
     private AgentController _agentController;
     private EnvironmentManager _envManager;
-
-    void Start ()
+    private List<Vector2> _allPoints;
+    private List<GameObject> _obstacleObjs = new List<GameObject>();
+    private List<GameObject> _goalObjs = new List<GameObject>();
+    private GameObject _parentOfGoals;
+    private GameObject _parentOfObstacles;
+    private void Start ()
     {
         LoadEnvironment();
         LoadAgent();
-        //StartCoroutine(Move());
+        InitAllPoints();
+        PlaceObjects();
+        StartCoroutine(Move());
     }
 
-    private void Update()
+    private void InitAllPoints()
     {
+        _allPoints = new List<Vector2>(_envManager.gridSize * _envManager.gridSize);
+        for (int x = 0; x < _envManager.gridSize; ++x)
+        {
+            for (int y = 0; y < _envManager.gridSize; ++y)
+            {
+                _allPoints.Add(new Vector2(x, y));
+            }
+        }
     }
 
     private System.Collections.IEnumerator Move()
@@ -25,36 +42,40 @@ public class GameManager : SingletonMono<GameManager>
         {
             for (int i = 0; i < 10; i++)
             {
-                _agentController.Move(AgentAction.Right);
+                //_agentController.Move(AgentAction.Right);
                 yield return new WaitForSeconds(0.5f);
+                PlaceObjects();
             }
             for (int i = 0; i < 10; i++)
             {
-                _agentController.Move(AgentAction.Up);
+                //_agentController.Move(AgentAction.Up);
                 yield return new WaitForSeconds(0.5f);
+                PlaceObjects();
             }
             for (int i = 0; i < 10; i++)
             {
-                _agentController.Move(AgentAction.Left);
+                //_agentController.Move(AgentAction.Left);
                 yield return new WaitForSeconds(0.5f);
+                PlaceObjects();
             }
             for (int i = 0; i < 10; i++)
             {
-                _agentController.Move(AgentAction.Down);
+                //_agentController.Move(AgentAction.Down);
                 yield return new WaitForSeconds(0.5f);
+                PlaceObjects();
             }
         }
     }
 
     private void LoadEnvironment()
     {
-        GameObject envObj = ResourceManager.Instance.LoadPrefab(ENVIRONMENT_PREFAB_PATH, "Environment");
+        GameObject envObj = ResourceManager.Instance.InstantiateGameObjectFromPath(ENVIRONMENT_PREFAB_PATH, "Environment");
         _envManager = CTool.GetOrAddComponent<EnvironmentManager>(envObj);
     }
 
     private void LoadAgent()
     {
-        GameObject agentObj = ResourceManager.Instance.LoadPrefab(AGENT_PREFAB_PATH, "Agent");
+        GameObject agentObj = ResourceManager.Instance.InstantiateGameObjectFromPath(AGENT_PREFAB_PATH, "Agent");
         _agentController = CTool.GetOrAddComponent<AgentController>(agentObj);
     }
 
@@ -66,5 +87,78 @@ public class GameManager : SingletonMono<GameManager>
     public EnvironmentManager GetEnvironmentManager()
     {
         return _envManager;
+    }
+
+    private void PlaceObjects()
+    {
+        int oneAgent = 1;
+        int totalPoints = _envManager.numObstacles + _envManager.numGoals + oneAgent;
+        List<Vector2> points = Algorithm.RandomSample(_allPoints, totalPoints);
+        print("============= Start ===================");
+        for (int i = 0; i < points.Count; i++)
+        {
+            print(points[i]);
+        }
+        print("============= End ===================");
+        PlaceAgent(points[0]);
+        PlaceObstacles(points, oneAgent, oneAgent + _envManager.numObstacles);
+        PlaceGoals(points, oneAgent + _envManager.numObstacles, points.Count);
+    }
+
+    private void PlaceAgent(Vector2 position)
+    {
+        if (_agentController == null)
+            return;
+        _agentController.transform.position = new Vector3(position.x, 0, position.y);
+    }
+
+    private void PlaceObstacles(List<Vector2> points, int startIndex, int endIndex)
+    {
+        if(_parentOfObstacles == null)
+            _parentOfObstacles = CTool.CreateEmptyGameObject("Obstacles");
+        for (int i = startIndex; i < endIndex; i++)
+        {
+            int index = i - startIndex;
+            if (_obstacleObjs.Count <= index)
+            {
+                GameObject obj = ResourceManager.Instance.InstantiateGameObjectFromPath(OBSTACLE_PREFAB_PATH, "Obstacle" + index);
+                if (obj != null)
+                {
+                    obj.transform.SetParent(_parentOfObstacles.transform, false);
+                    obj.transform.localPosition = new Vector3(points[i].x, 0, points[i].y);
+                    _obstacleObjs.Add(obj);
+                }
+            }
+            else
+            {
+                GameObject obj = _obstacleObjs[index];
+                obj.transform.localPosition = new Vector3(points[i].x, 0, points[i].y);
+            }
+        }
+    }
+
+    private void PlaceGoals(List<Vector2> points, int startIndex, int endIndex)
+    {
+        if(_parentOfGoals == null)
+            _parentOfGoals = CTool.CreateEmptyGameObject("Goals");
+        for (int i = startIndex; i < endIndex; i++)
+        {
+            int index = i - startIndex;
+            if (_goalObjs.Count <= index)
+            {
+                GameObject obj = ResourceManager.Instance.InstantiateGameObjectFromPath(GOAL_PREFAB_PATH, "Goal" + index);
+                if (obj != null)
+                {
+                    obj.transform.SetParent(_parentOfGoals.transform, false);
+                    obj.transform.localPosition = new Vector3(points[i].x, 0, points[i].y);
+                    _goalObjs.Add(obj);
+                }
+            }
+            else
+            {
+                GameObject obj = _goalObjs[index];
+                obj.transform.localPosition = new Vector3(points[i].x, 0, points[i].y);
+            }
+        }
     }
 }

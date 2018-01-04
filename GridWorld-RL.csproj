@@ -294,6 +294,7 @@
     <Compile Include="Assets\Scripts\Game\GridAgent.cs" />
     <Compile Include="Assets\Scripts\Game\MessageObject.cs" />
     <Compile Include="Assets\Scripts\System\ResourceManager.cs" />
+    <Compile Include="Assets\Scripts\Utils\Algorithm.cs" />
     <Compile Include="Assets\Scripts\Utils\CTool.cs" />
     <Compile Include="Assets\Scripts\Utils\ImageTool.cs" />
     <Compile Include="Assets\Scripts\Utils\Logger.cs" />
