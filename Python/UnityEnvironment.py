@@ -5,15 +5,11 @@
 @file: UnityEnvironment.py
 @time: 2018/1/2 12:12
 '''
-import sys
 import atexit
 import socket
 import struct
-from PIL import Image
-import io
-import numpy as np
-import cv2 as cv
-
+import json
+from image_utils import process_pixels
 CMD_EXIT  = "EXIT"
 CMD_STEP  = "STEP"
 CMD_RESET = "RESET"
@@ -45,66 +41,74 @@ class UnityEnvironment(object):
         except socket.timeout as e:
             raise socket.error(e.strerror)
 
-    def recv(self):
+    def _recv_bytes(self):
         try:
-            data = self._conn.recv(self._buffer_size).decode('utf-8')
-        except Exception as e:
-            sys.exit()
+            data = self._conn.recv(self._buffer_size)
+        except Exception as ex:
+            raise ex
         return data
 
-    def send(self, msg):
-        if msg is None:
+    def _recv_image_data(self):
+        s = self._recv_bytes()
+        data_length = struct.unpack("I", bytearray(s[:4]))[0]
+        s = s[4:]
+        while len(s) != data_length:
+            s += self._recv_bytes()
+        return s
+
+    def _recv(self):
+        data = self._recv_bytes()
+        if data is None:
+            return None
+        return data.decode('utf-8')
+
+    def _send_bytes(self, bytes_data):
+        if bytes_data is None:
             return
         try:
-            self._conn.send(msg.encode('utf-8'))
-        except Exception:
-            pass
+            self._conn.send(bytes_data)
+        except Exception as ex:
+            raise ex
+
+    def _send(self, msg):
+        if msg is None:
+            return
+        self._send_bytes(msg.encode('utf-8'))
+
+    def reset(self):
+        env._send(CMD_RESET)
+        img_data = env._recv_bytes()
+        img = process_pixels(img_data)
+        return img
+
+    def step(self, action):
+        env._send(CMD_STEP)
+        env._recv_bytes()
+        env._send_action(action)
+        data = env._recv_image_data()
+        img_data = process_pixels(data)
+        print("Recv image, shape:", img_data.shape)
 
     def close(self):
         if self._socket is not None:
             print("Closing...")
-            self.send(CMD_EXIT)
+            self._send(CMD_EXIT)
             self._socket.close()
             self._socket = None
 
-    def recv_bytes(self):
-        try:
-            s = self._conn.recv(self._buffer_size)
-            data_length = struct.unpack("I", bytearray(s[:4]))[0]
-            s = s[4:]
-            while len(s) != data_length:
-                s += self._conn.recv(self._buffer_size)
-        except Exception as ex:
-            raise ex
-        return s
-
-    def send_action(self):
-        """
-        Send dictionary of actions, memories, and value estimates over socket.
-        :param action: a dictionary of lists of actions.
-        :param memory: a dictionary of lists of of memories.
-        :param value: a dictionary of lists of of value estimates.
-        """
-        try:
-            self._conn.recv(self._buffer_size)
-        except Exception as ex:
-            raise ex
-        # action_message = {"action": action, "memory": memory, "value": value}
-        self._conn.send("1".encode('utf-8'))
-
-def process_pixels(image_bytes=None):
-    s = bytearray(image_bytes)
-    image = Image.open(io.BytesIO(s))
-    return np.array(image)
+    def _send_action(self, action):
+        action_message = {"Action": action}
+        self._conn.send(json.dumps(action_message).encode('utf-8'))
 
 if __name__ == '__main__':
     env = UnityEnvironment()
+    env.step(1)
     flag = False
-    env.send(CMD_STEP)
-    env.send_action()
-    data = env.recv_bytes()
-    img_data = process_pixels(data)
-    print("Recv image, shape:", img_data.shape)
+    # env._send(CMD_STEP)
+    # env._send_action(1)
+    # data = env._recv_bytes()
+    # img_data = process_pixels(data)
+    # print("Recv image, shape:", img_data.shape)
     # while True:
     #     if flag:
     #         env.send(CMD_RESET)

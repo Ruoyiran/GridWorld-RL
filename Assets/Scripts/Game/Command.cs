@@ -1,6 +1,6 @@
 ﻿
 public abstract class Command{
-    protected const string EXIT = "EXIT";
+    protected const string QUIT = "QUIT";
     protected const string RESET = "RESET";
     protected const string STEP = "STEP";
     protected string _name = "Command";
@@ -22,8 +22,8 @@ public abstract class Command{
     {
         switch (cmd)    
         {
-            case EXIT:
-                return new CommandExit(agent);
+            case QUIT:
+                return new CommandQuit(agent);
             case RESET:
                 return new CommandReset(agent);
             case STEP:
@@ -37,16 +37,16 @@ public abstract class Command{
     public abstract void Action();
 }
 
-public class CommandExit : Command
+public class CommandQuit : Command
 {
-    public CommandExit(Agent agent) : base(agent)
+    public CommandQuit(Agent agent) : base(agent)
     {
-        _name = EXIT;
+        _name = QUIT;
     }
 
     public override void Action()
     {
-        _agent.Exit();
+        _agent.Quit();
     }
 }
 

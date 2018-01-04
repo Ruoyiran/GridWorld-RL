@@ -283,16 +283,19 @@
     <Reference Include="UnityEngine.StandardEvents">
       <HintPath>C:/Users/Roy/AppData/LocalLow/Unity/cache/packages/packages.unity.com/com.unity.standardevents@1.0.10/UnityEngine.StandardEvents.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>Assets/Plugins/JSON/Newtonsoft.Json.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\Agent.cs" />
-    <Compile Include="Assets\Scripts\Command.cs" />
-    <Compile Include="Assets\Scripts\Communicator.cs" />
     <Compile Include="Assets\Scripts\Game\Agent.cs" />
+    <Compile Include="Assets\Scripts\Game\AgentController.cs" />
     <Compile Include="Assets\Scripts\Game\Command.cs" />
     <Compile Include="Assets\Scripts\Game\Communicator.cs" />
+    <Compile Include="Assets\Scripts\Game\EnvironmentManager.cs" />
+    <Compile Include="Assets\Scripts\Game\GameManager.cs" />
     <Compile Include="Assets\Scripts\Game\GridAgent.cs" />
-    <Compile Include="Assets\Scripts\GridAgent.cs" />
+    <Compile Include="Assets\Scripts\Game\MessageObject.cs" />
     <Compile Include="Assets\Scripts\Utils\ImageTool.cs" />
     <Compile Include="Assets\Scripts\Utils\Logger.cs" />
     <Compile Include="Assets\Scripts\Utils\Singleton.cs" />
