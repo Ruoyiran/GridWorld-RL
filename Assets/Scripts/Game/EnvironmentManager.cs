@@ -2,8 +2,8 @@
 
 public class EnvironmentManager : MonoBehaviour {
     public int gridSize = 5;
-    public int numObstacles = 1;
-    public int numGoals = 1;
+    public int numObstacles = 3;
+    public int numGoals = 3;
     private GameObject _planeObj;
     private GameObject _eastWallObj;
     private GameObject _westWallObj;

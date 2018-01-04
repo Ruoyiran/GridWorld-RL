@@ -4,10 +4,9 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - wall
-  - pit
-  - goal
-  - agent
+  - Agent
+  - Goal
+  - Pit
   layers:
   - Default
   - TransparentFX
@@ -17,7 +16,7 @@ TagManager:
   - UI
   - 
   - 
-  - Agent
+  - 
   - 
   - 
   - 
