@@ -5,14 +5,6 @@ using Newtonsoft.Json;
 
 public class GridAgent : Agent
 {
-    enum Action
-    {
-        Up = 0,
-        Down = 1,
-        Left = 2,
-        Right = 3,
-    }
-
     private int imageWidth = 84;
     private int imageHeight = 84;
     public Camera renderCamera;
@@ -59,7 +51,7 @@ public class GridAgent : Agent
         _communicator.SendToServer("Received");
         string jsonData = _communicator.ReceiveFromServer();
         AgentMessage message = JsonConvert.DeserializeObject<AgentMessage>(jsonData);
-        Step((Action)message.Action);
+        Step((AgentAction)message.Action);
 
         //Texture2D tex = ImageTool.RenderToTex(renderCamera, imageWidth, imageHeight);
         //byte[] imageBytes = tex.EncodeToPNG();
@@ -82,17 +74,17 @@ public class GridAgent : Agent
             _communicator.Disconnect();
     }
 
-    private void Step(Action action)
+    private void Step(AgentAction action)
     {
         switch (action)
         {
-            case Action.Up:
+            case AgentAction.Up:
                 break;
-            case Action.Down:
+            case AgentAction.Down:
                 break;
-            case Action.Left:
+            case AgentAction.Left:
                 break;
-            case Action.Right:
+            case AgentAction.Right:
                 break;
             default:
                 break;

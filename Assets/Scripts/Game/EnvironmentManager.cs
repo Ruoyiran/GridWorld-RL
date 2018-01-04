@@ -4,24 +4,27 @@ public class EnvironmentManager : MonoBehaviour {
     public int gridSize = 5;
     public int numObstacles = 1;
     public int numGoals = 1;
-    [SerializeField]
-    private Camera _mainCamera;
-    [SerializeField]
     private GameObject _planeObj;
-    [SerializeField]
     private GameObject _eastWallObj;
-    [SerializeField]
     private GameObject _westWallObj;
-    [SerializeField]
     private GameObject _northWallObj;
-    [SerializeField]
     private GameObject _southWallObj;
 
-    // Use this for initialization
-    void Start () {
+    void Start()
+    {
+        InitEnvironmentObjects();
         SetEnvironment();
     }
-	
+
+    private void InitEnvironmentObjects()
+    {
+        _planeObj = CTool.FindGameObject(gameObject, "Plane");
+        _eastWallObj = CTool.FindGameObject(gameObject, "East");
+        _westWallObj = CTool.FindGameObject(gameObject, "West");
+        _northWallObj = CTool.FindGameObject(gameObject, "North");
+        _southWallObj = CTool.FindGameObject(gameObject, "South");
+    }
+
     private void SetEnvironment()
     {
         Camera mainCamera = Camera.main;

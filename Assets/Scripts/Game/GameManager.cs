@@ -1,21 +1,70 @@
-﻿using UnityEngine;
+﻿using Utils;
+using UnityEngine;
 
-public class GameManager : MonoBehaviour {
-    [SerializeField]
-    private GameObject _environmentObj;
-	// Use this for initialization
-	void Start ()
+public class GameManager : SingletonMono<GameManager>
+{
+    private const string ENVIRONMENT_PREFAB_PATH = "Prefabs/Environment";
+    private const string AGENT_PREFAB_PATH = "Prefabs/Agent";
+    private AgentController _agentController;
+    private EnvironmentManager _envManager;
+
+    void Start ()
     {
-        SetEnvironment();
+        LoadEnvironment();
+        LoadAgent();
+        //StartCoroutine(Move());
     }
 
-    // Update is called once per frame
-    void Update()
+    private void Update()
     {
     }
 
-    private void SetEnvironment()
+    private System.Collections.IEnumerator Move()
     {
-        //_environmentObj.transform.Find();
+        while (true)
+        {
+            for (int i = 0; i < 10; i++)
+            {
+                _agentController.Move(AgentAction.Right);
+                yield return new WaitForSeconds(0.5f);
+            }
+            for (int i = 0; i < 10; i++)
+            {
+                _agentController.Move(AgentAction.Up);
+                yield return new WaitForSeconds(0.5f);
+            }
+            for (int i = 0; i < 10; i++)
+            {
+                _agentController.Move(AgentAction.Left);
+                yield return new WaitForSeconds(0.5f);
+            }
+            for (int i = 0; i < 10; i++)
+            {
+                _agentController.Move(AgentAction.Down);
+                yield return new WaitForSeconds(0.5f);
+            }
+        }
+    }
+
+    private void LoadEnvironment()
+    {
+        GameObject envObj = ResourceManager.Instance.LoadPrefab(ENVIRONMENT_PREFAB_PATH, "Environment");
+        _envManager = CTool.GetOrAddComponent<EnvironmentManager>(envObj);
+    }
+
+    private void LoadAgent()
+    {
+        GameObject agentObj = ResourceManager.Instance.LoadPrefab(AGENT_PREFAB_PATH, "Agent");
+        _agentController = CTool.GetOrAddComponent<AgentController>(agentObj);
+    }
+
+    public AgentController GetAgentController()
+    {
+        return _agentController;
+    }
+
+    public EnvironmentManager GetEnvironmentManager()
+    {
+        return _envManager;
     }
 }

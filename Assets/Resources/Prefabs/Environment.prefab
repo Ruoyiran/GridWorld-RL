@@ -108,7 +108,6 @@ GameObject:
   m_Component:
   - component: {fileID: 4568798455498806}
   - component: {fileID: 114817869144835016}
-  - component: {fileID: 114999211843084358}
   m_Layer: 8
   m_Name: Environment
   m_TagString: Untagged
@@ -546,23 +545,3 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderCamera: {fileID: 20751741813902018}
---- !u!114 &114999211843084358
-MonoBehaviour:
-  m_ObjectHideFlags: 1
-  m_PrefabParentObject: {fileID: 0}
-  m_PrefabInternal: {fileID: 100100000}
-  m_GameObject: {fileID: 1934893388282510}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 258d9d393fe7831429f5ec26e0ff554a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  gridSize: 5
-  numObstacles: 1
-  numGoals: 1
-  _mainCamera: {fileID: 0}
-  _planeObj: {fileID: 1383511552153740}
-  _eastWallObj: {fileID: 1858033218341694}
-  _westWallObj: {fileID: 1441562180558814}
-  _northWallObj: {fileID: 1935901996978124}
-  _southWallObj: {fileID: 1105169997873318}
