@@ -22,7 +22,7 @@ GameObject:
   - component: {fileID: 33297748647671602}
   - component: {fileID: 65439704505015706}
   - component: {fileID: 23833739472231758}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Cube (1)
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -40,7 +40,7 @@ GameObject:
   - component: {fileID: 33355843709390916}
   - component: {fileID: 65087511814012390}
   - component: {fileID: 23151230937589412}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Cube
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -57,7 +57,7 @@ GameObject:
   - component: {fileID: 4302184315941402}
   - component: {fileID: 33217562963522382}
   - component: {fileID: 65172047905851350}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Pit
   m_TagString: Pit
   m_Icon: {fileID: 0}

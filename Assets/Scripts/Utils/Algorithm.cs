@@ -30,4 +30,14 @@ public class Algorithm {
         }
         return samples;
     }
+
+    public static byte[] AppendLength(byte[] input)
+    {
+        if (input == null)
+            return input;
+        byte[] newArray = new byte[input.Length + 4];
+        input.CopyTo(newArray, 4);
+        System.BitConverter.GetBytes(input.Length).CopyTo(newArray, 0);
+        return newArray;
+    }
 }

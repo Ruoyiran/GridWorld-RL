@@ -19,29 +19,27 @@ namespace GridWorld
         private void Update()
         {
 #if UNITY_EDITOR || UNITY_STANDALONE
-            float reward = 0f;
+            AgentStepMessage msg = null;
             if (Input.GetKeyDown(KeyCode.LeftArrow))
             {
-                reward = _env.Step(Action.Left);
-                print("Reward: " + reward);
+                msg = _env.Step(Action.Left);
             }
             else if (Input.GetKeyDown(KeyCode.RightArrow))
             {
-                reward = _env.Step(Action.Right);
-                print("Reward: " + reward);
+                msg = _env.Step(Action.Right);
             }
             else if (Input.GetKeyDown(KeyCode.UpArrow))
             {
-                reward = _env.Step(Action.Up);
-                print("Reward: " + reward);
+                msg = _env.Step(Action.Up);
             }
             else if (Input.GetKeyDown(KeyCode.DownArrow))
             {
-                reward = _env.Step(Action.Down);
-                print("Reward: " + reward);
+                msg = _env.Step(Action.Down);
             }
             else if (Input.GetKeyDown(KeyCode.Escape))
                 _env.Reset();
+            if(msg != null)
+                Logger.Print("Reward: {0}", msg.Reward);
 #endif
         }
 

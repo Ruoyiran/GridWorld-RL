@@ -2,7 +2,7 @@
 @version: 1.0
 @author: royran
 @contact: iranpeng@gmail.com
-@file: UnityEnvironment.py
+@file: unity_environment.py
 @time: 2018/1/2 12:12
 '''
 import atexit
@@ -48,7 +48,7 @@ class UnityEnvironment(object):
             raise ex
         return data
 
-    def _recv_image_data(self):
+    def _recv_bytes_except_header(self):
         s = self._recv_bytes()
         data_length = struct.unpack("I", bytearray(s[:4]))[0]
         s = s[4:]
@@ -76,19 +76,28 @@ class UnityEnvironment(object):
         self._send_bytes(msg.encode('utf-8'))
 
     def reset(self):
-        env._send(CMD_RESET)
-        img_data = env._recv_bytes()
-        # img = process_pixels(img_data)
-        # return img
-        return None
+        self._send(CMD_RESET)
+        return self._recv_state_image()
 
     def step(self, action):
-        env._send(CMD_STEP)
-        env._recv_bytes()
-        env._send_action(action)
-        data = env._recv_image_data()
-        img_data = process_pixels(data)
-        print("Recv image, shape:", img_data.shape)
+        self._send(CMD_STEP)
+        self._recv_bytes()
+        self._send_action(action)
+        reward, is_done = self._recv_step_json_data()
+        state = self._recv_state_image()
+        return state, reward, is_done
+
+    def _recv_step_json_data(self):
+        json_data = self._recv_bytes_except_header()
+        step_msg = json.loads(json_data.decode('utf-8'))
+        reward = step_msg["Reward"]
+        is_done = step_msg["IsDone"]
+        return reward, is_done
+
+    def _recv_state_image(self):
+        image_data = self._recv_bytes_except_header()
+        img = process_pixels(image_data)
+        return img
 
     def close(self):
         if self._socket is not None:
@@ -100,26 +109,3 @@ class UnityEnvironment(object):
     def _send_action(self, action):
         action_message = {"Action": action}
         self._conn.send(json.dumps(action_message).encode('utf-8'))
-
-if __name__ == '__main__':
-    env = UnityEnvironment()
-    env.reset()
-    import numpy as np
-    while True:
-        env.step(np.random.randint(0, 4))
-    # env._send(CMD_STEP)
-    # env._send_action(1)
-    # data = env._recv_bytes()
-    # img_data = process_pixels(data)
-    # print("Recv image, shape:", img_data.shape)
-    # while True:
-    #     if flag:
-    #         env.send(CMD_RESET)
-    #         data = env.recv()
-    #         print("Recv:", data)
-    #     else:
-    #         env.send(CMD_STEP)
-    #         data = env.recv_bytes()
-    #         img_data = process_pixels(data)
-    #         print("Recv image, shape:", img_data.shape)
-    #     flag = not flag

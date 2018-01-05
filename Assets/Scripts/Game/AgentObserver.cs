@@ -2,17 +2,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Newtonsoft.Json;
-using System;
+using System.Text;
 
 namespace GridWorld
 {
     public class AgentObserver : Observer
     {
-        private int imageWidth = 84;
-        private int imageHeight = 84;
-        private Communicator _communicator;
         private string _ipAddress = "127.0.0.1";
         private int _port = 8008;
+        private Communicator _communicator;
         private Dictionary<string, Command> _commands;
         private Environment _env;
 
@@ -52,8 +50,8 @@ namespace GridWorld
         public override void Reset()
         {
             Logger.Print("Reset");
-            NotifyServerDataReceived();
-            _env.Reset();
+            byte[] imageBytes = _env.Reset();
+            SendDataBytesToServer(imageBytes);
         }
 
         public override void Step()
@@ -62,13 +60,10 @@ namespace GridWorld
             NotifyServerDataReceived();
             string jsonData = _communicator.ReceiveFromServer();
             AgentMessage message = JsonConvert.DeserializeObject<AgentMessage>(jsonData);
-            _env.Step((Action)message.Action);
-            Texture2D tex = ImageTool.RenderToTex(_env.EnvCamera, imageWidth, imageHeight);
-            byte[] imageBytes = tex.EncodeToPNG();
-            byte[] bytes = ImageTool.AppendLength(imageBytes);
-            DestroyImmediate(tex);
-            Resources.UnloadUnusedAssets();
-            _communicator.SendToServer(bytes);
+            AgentStepMessage stepMsg = _env.Step((Action)message.Action);
+            string stepData = JsonConvert.SerializeObject(stepMsg, Formatting.Indented);
+            SendDataBytesToServer(Encoding.ASCII.GetBytes(stepData));
+            SendDataBytesToServer(_env.GetEnvironmentImageBytes());
         }
 
         public override void Quit()
@@ -89,5 +84,10 @@ namespace GridWorld
             _communicator.SendToServer("Received");
         }
 
+        private void SendDataBytesToServer(byte[] data)
+        {
+            byte[] bytes = Algorithm.AppendLength(data);
+            _communicator.SendToServer(bytes);
+        }
     }
 }

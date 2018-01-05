@@ -8,17 +8,12 @@ namespace GridWorld
         private const string AGENT_PREFAB_PATH = "Prefabs/Agent";
         private const string OBSTACLE_PREFAB_PATH = "Prefabs/Pit";
         private const string GOAL_PREFAB_PATH = "Prefabs/Goal";
+
         public int gridSize = 7;
         public int numObstacles = 3;
         public int numGoals = 3;
-        public Camera EnvCamera
-        {
-            get
-            {
-                return _envCamera;
-            }
-        }
-
+        private int _envImageWidth = 84;
+        private int _envImageHeight = 84;
         private Camera _envCamera;
         private GameObject _agentObj;
         private GameObject _planeObj;
@@ -111,8 +106,6 @@ namespace GridWorld
             for (int i = 0; i < numObstacles; i++)
             {
                 GameObject obj = ResourceManager.Instance.InstantiateGameObjectFromPath(OBSTACLE_PREFAB_PATH, "Obstacle" + i, transform);
-                if (obj == null)
-                    break;
                 CTool.ResetGameObjectTransform(obj);
                 _obstacleObjs.Add(obj);
             }
@@ -124,14 +117,12 @@ namespace GridWorld
             for (int i = 0; i < numGoals; i++)
             {
                 GameObject obj = ResourceManager.Instance.InstantiateGameObjectFromPath(GOAL_PREFAB_PATH, "Goal" + i, transform);
-                if (obj == null)
-                    break;
                 CTool.ResetGameObjectTransform(obj);
                 _goalObjs.Add(obj);
             }
         }
 
-        public void Reset()
+        public byte[] Reset()
         {
             int oneAgent = 1;
             int totalPoints = numObstacles + numGoals + oneAgent;
@@ -139,12 +130,13 @@ namespace GridWorld
             PlaceObject(_agentObj, points[0]);
             PlaceObstacles(points, oneAgent, oneAgent + numObstacles);
             PlaceGoals(points, oneAgent + numObstacles, points.Count);
+            return GetEnvironmentImageBytes();
         }
 
-        public float Step(Action action)
+        public AgentStepMessage Step(Action action)
         {
             if (_agent == null)
-                return 0;
+                return null;
             switch (action)
             {
                 case Action.Up:
@@ -162,7 +154,19 @@ namespace GridWorld
                 default:
                     break;
             }
-            return _agent.CheckReward();
+            AgentStepMessage msg = new AgentStepMessage();
+            msg.Reward = _agent.CheckReward();
+            msg.IsDone = false;
+            return msg;
+        }
+
+        public byte[] GetEnvironmentImageBytes()
+        {
+            Texture2D tex = ImageTool.RenderToTex(_envCamera, _envImageWidth, _envImageHeight);
+            byte[] imageBytes = tex.EncodeToPNG();
+            DestroyImmediate(tex);
+            Resources.UnloadUnusedAssets();
+            return imageBytes;
         }
 
         private void MoveUp()

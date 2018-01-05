@@ -41,12 +41,4 @@ public class ImageTool {
         RenderTexture.ReleaseTemporary(renderRT);
         return tex;
     }
-
-    public static byte[] AppendLength(byte[] input)
-    {
-        byte[] newArray = new byte[input.Length + 4];
-        input.CopyTo(newArray, 4);
-        System.BitConverter.GetBytes(input.Length).CopyTo(newArray, 0);
-        return newArray;
-    }
 }
