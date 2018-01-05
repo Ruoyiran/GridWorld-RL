@@ -10,6 +10,8 @@ public class ImageTool {
 
     public static Texture2D RenderToTex(Camera camera, int width, int height)
     {
+        if (camera == null)
+            return null;
         Camera cam = camera;
         Rect oldRec = camera.rect;
         cam.rect = new Rect(0f, 0f, 1f, 1f);

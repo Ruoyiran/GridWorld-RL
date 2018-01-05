@@ -6,7 +6,7 @@ public class ResourceManager : Singleton<ResourceManager>
 {
     private Dictionary<string, GameObject> _gameObjPool = new Dictionary<string, GameObject>();
 
-    public GameObject InstantiateGameObjectFromPath(string path, string name = null)
+    public GameObject InstantiateGameObjectFromPath(string path, string name = null, Transform parent = null)
     {
         if (string.IsNullOrEmpty(path))
         {
@@ -24,6 +24,8 @@ public class ResourceManager : Singleton<ResourceManager>
             return null;
         }
         GameObject newObj = Object.Instantiate(prefab);
+        if (parent != null)
+            newObj.transform.SetParent(parent, false);
         if (!string.IsNullOrEmpty(name))
             newObj.name = name;
         _gameObjPool.Add(path, prefab);

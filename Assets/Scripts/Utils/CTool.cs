@@ -27,9 +27,16 @@ public class CTool {
         GameObject obj = new GameObject();
         if (!string.IsNullOrEmpty(name))
             obj.name = name;
-        obj.transform.position = Vector3.zero;
-        obj.transform.localScale = Vector3.one;
-        obj.transform.rotation = Quaternion.identity;
+        ResetGameObjectTransform(obj);
         return obj;
+    }
+
+    public static void ResetGameObjectTransform(GameObject obj)
+    {
+        if (obj == null)
+            return;
+        obj.transform.localPosition = Vector3.zero;
+        obj.transform.localScale = Vector3.one;
+        obj.transform.localRotation = Quaternion.identity;
     }
 }

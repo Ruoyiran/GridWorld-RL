@@ -10,7 +10,7 @@ import socket
 import struct
 import json
 from image_utils import process_pixels
-CMD_EXIT  = "EXIT"
+CMD_QUIT  = "QUIT"
 CMD_STEP  = "STEP"
 CMD_RESET = "RESET"
 
@@ -78,8 +78,9 @@ class UnityEnvironment(object):
     def reset(self):
         env._send(CMD_RESET)
         img_data = env._recv_bytes()
-        img = process_pixels(img_data)
-        return img
+        # img = process_pixels(img_data)
+        # return img
+        return None
 
     def step(self, action):
         env._send(CMD_STEP)
@@ -92,7 +93,7 @@ class UnityEnvironment(object):
     def close(self):
         if self._socket is not None:
             print("Closing...")
-            self._send(CMD_EXIT)
+            self._send(CMD_QUIT)
             self._socket.close()
             self._socket = None
 
@@ -102,8 +103,10 @@ class UnityEnvironment(object):
 
 if __name__ == '__main__':
     env = UnityEnvironment()
-    env.step(1)
-    flag = False
+    env.reset()
+    import numpy as np
+    while True:
+        env.step(np.random.randint(0, 4))
     # env._send(CMD_STEP)
     # env._send_action(1)
     # data = env._recv_bytes()

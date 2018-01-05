@@ -1,10 +1,11 @@
 ﻿
-public abstract class Command{
+public abstract class Command
+{
     protected const string QUIT = "QUIT";
     protected const string RESET = "RESET";
     protected const string STEP = "STEP";
     protected string _name = "Command";
-    protected Agent _agent;
+    protected Observer _observer;
     public string Name
     {
         get
@@ -13,21 +14,21 @@ public abstract class Command{
         }
     }
 
-    public Command(Agent agent)
+    public Command(Observer observer)
     {
-        _agent = agent;
+        _observer = observer;
     }
 
-    public static Command GetCommand(string cmd, Agent agent)
+    public static Command GetCommand(string cmd, Observer observer)
     {
         switch (cmd)    
         {
             case QUIT:
-                return new CommandQuit(agent);
+                return new CommandQuit(observer);
             case RESET:
-                return new CommandReset(agent);
+                return new CommandReset(observer);
             case STEP:
-                return new CommandStep(agent);
+                return new CommandStep(observer);
             default:
                 break;
         }
@@ -39,41 +40,42 @@ public abstract class Command{
 
 public class CommandQuit : Command
 {
-    public CommandQuit(Agent agent) : base(agent)
+    public CommandQuit(Observer observer) : base(observer)
     {
         _name = QUIT;
     }
 
     public override void Action()
     {
-        _agent.Quit();
+        if(_observer != null)
+            _observer.Quit();
     }
 }
 
 public class CommandReset : Command
 {
-    public CommandReset(Agent agent) : base(agent)
+    public CommandReset(Observer observer) : base(observer)
     {
         _name = RESET;
     }
 
     public override void Action()
     {
-        if (_agent != null)
-            _agent.Reset();
+        if (_observer != null)
+            _observer.Reset();
     }
 }
 
 public class CommandStep : Command
 {
-    public CommandStep(Agent agent) : base(agent)
+    public CommandStep(Observer observer) : base(observer)
     {
         _name = STEP;
     }
 
     public override void Action()
     {
-        if (_agent != null)
-            _agent.Step();
+        if (_observer != null)
+            _observer.Step();
     }
 }

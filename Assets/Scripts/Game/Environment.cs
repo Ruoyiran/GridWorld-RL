@@ -1,0 +1,254 @@
+﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
+namespace GridWorld
+{
+    public class Environment : MonoBehaviour
+    {
+        private const string AGENT_PREFAB_PATH = "Prefabs/Agent";
+        private const string OBSTACLE_PREFAB_PATH = "Prefabs/Pit";
+        private const string GOAL_PREFAB_PATH = "Prefabs/Goal";
+        public int gridSize = 7;
+        public int numObstacles = 3;
+        public int numGoals = 3;
+        public Camera EnvCamera
+        {
+            get
+            {
+                return _envCamera;
+            }
+        }
+
+        private Camera _envCamera;
+        private GameObject _agentObj;
+        private GameObject _planeObj;
+        private GameObject _eastWallObj;
+        private GameObject _westWallObj;
+        private GameObject _northWallObj;
+        private GameObject _southWallObj;
+        private List<Vector3> _allPositions;
+        private List<GameObject> _goalObjs;
+        private List<GameObject> _obstacleObjs;
+        private Agent _agent;
+
+        void Start()
+        {
+            InitAllPositions();
+            InitObjects();
+            SetEnvironment();
+            if (_agent != null)
+                _agent.OnColliderEvent += OnColliderEventHandler;
+        }
+
+        private void InitAllPositions()
+        {
+            _allPositions = new List<Vector3>(gridSize * gridSize);
+            for (int i = 0; i < gridSize; i++)
+            {
+                for (int j = 0; j < gridSize; j++)
+                {
+                    _allPositions.Add(new Vector3(i, 0, j));
+                }
+            }
+        }
+
+        private void SetEnvironment()
+        {
+            Camera mainCamera = Camera.main;
+            mainCamera.transform.position = new Vector3(-(gridSize - 1) / 2f, gridSize * 1.25f, -(gridSize - 1) / 2f);
+            mainCamera.orthographicSize = (gridSize + 5f) / 2f;
+
+            _planeObj.transform.localScale = new Vector3(gridSize / 10.0f, 1f, gridSize / 10.0f);
+            _planeObj.transform.position = new Vector3((gridSize - 1) / 2f, -0.5f, (gridSize - 1) / 2f);
+
+            _eastWallObj.transform.position = new Vector3(gridSize, 0.0f, (gridSize - 1) / 2f);
+            _eastWallObj.transform.localScale = new Vector3(1, 1, gridSize + 2);
+
+            _westWallObj.transform.position = new Vector3(-1, 0.0f, (gridSize - 1) / 2f);
+            _westWallObj.transform.localScale = new Vector3(1, 1, gridSize + 2);
+
+            _southWallObj.transform.position = new Vector3((gridSize - 1) / 2f, 0.0f, -1);
+            _southWallObj.transform.localScale = new Vector3(1, 1, gridSize + 2);
+
+            _northWallObj.transform.position = new Vector3((gridSize - 1) / 2f, 0.0f, gridSize);
+            _northWallObj.transform.localScale = new Vector3(1, 1, gridSize + 2);
+        }
+
+        private void InitObjects()
+        {
+            InitEnvironmentObjs();
+            InitEnvCamera();
+            LoadAgentObj();
+            LoadObstacleObjs();
+            LoadGoalObjs();
+        }
+
+        private void InitEnvironmentObjs()
+        {
+            _planeObj = CTool.FindGameObject(gameObject, "Plane");
+            _eastWallObj = CTool.FindGameObject(gameObject, "East");
+            _westWallObj = CTool.FindGameObject(gameObject, "West");
+            _northWallObj = CTool.FindGameObject(gameObject, "North");
+            _southWallObj = CTool.FindGameObject(gameObject, "South");
+        }
+
+        private void InitEnvCamera()
+        {
+            GameObject obj = CTool.FindGameObject(gameObject, "EnvCamera");
+            _envCamera = obj.GetComponent<Camera>();
+        }
+
+        private void LoadAgentObj()
+        {
+            _agentObj = ResourceManager.Instance.InstantiateGameObjectFromPath(AGENT_PREFAB_PATH, "Agent", transform);
+            CTool.ResetGameObjectTransform(_agentObj);
+            _agent = CTool.GetOrAddComponent<Agent>(_agentObj);
+        }
+
+        private void LoadObstacleObjs()
+        {
+            _obstacleObjs = new List<GameObject>();
+            for (int i = 0; i < numObstacles; i++)
+            {
+                GameObject obj = ResourceManager.Instance.InstantiateGameObjectFromPath(OBSTACLE_PREFAB_PATH, "Obstacle" + i, transform);
+                if (obj == null)
+                    break;
+                CTool.ResetGameObjectTransform(obj);
+                _obstacleObjs.Add(obj);
+            }
+        }
+
+        private void LoadGoalObjs()
+        {
+            _goalObjs = new List<GameObject>();
+            for (int i = 0; i < numGoals; i++)
+            {
+                GameObject obj = ResourceManager.Instance.InstantiateGameObjectFromPath(GOAL_PREFAB_PATH, "Goal" + i, transform);
+                if (obj == null)
+                    break;
+                CTool.ResetGameObjectTransform(obj);
+                _goalObjs.Add(obj);
+            }
+        }
+
+        public void Reset()
+        {
+            int oneAgent = 1;
+            int totalPoints = numObstacles + numGoals + oneAgent;
+            List<Vector3> points = Algorithm.RandomSample(_allPositions, totalPoints);
+            PlaceObject(_agentObj, points[0]);
+            PlaceObstacles(points, oneAgent, oneAgent + numObstacles);
+            PlaceGoals(points, oneAgent + numObstacles, points.Count);
+        }
+
+        public float Step(Action action)
+        {
+            if (_agent == null)
+                return 0;
+            switch (action)
+            {
+                case Action.Up:
+                    MoveUp();
+                    break;
+                case Action.Down:
+                    MoveDown();
+                    break;
+                case Action.Left:
+                    MoveLeft();
+                    break;
+                case Action.Right:
+                    MoveRight();
+                    break;
+                default:
+                    break;
+            }
+            return _agent.CheckReward();
+        }
+
+        private void MoveUp()
+        {
+            if (_agent.transform.position.z + 1 < gridSize)
+                _agent.MoveUp();
+        }
+        private void MoveDown()
+        {
+            if (_agent.transform.position.z - 1 >= 0)
+                _agent.MoveDown();
+        }
+
+        private void MoveLeft()
+        {
+            if (_agent.transform.position.x - 1 >= 0)
+                _agent.MoveLeft();
+        }
+
+        private void MoveRight()
+        {
+            if (_agent.transform.position.x + 1 < gridSize)
+                _agent.MoveRight();
+        }
+
+        private void PlaceObject(GameObject obj, Vector3 position)
+        {
+            if (obj == null)
+                return;
+            obj.transform.position = position;
+        }
+
+        private void PlaceObstacles(List<Vector3> points, int startIndex, int endIndex)
+        {
+            for (int i = startIndex; i < endIndex; i++)
+            {
+                int index = i - startIndex;
+                PlaceObject(_obstacleObjs[index], points[i]);
+            }
+        }
+
+        private void PlaceGoals(List<Vector3> points, int startIndex, int endIndex)
+        {
+            for (int i = startIndex; i < endIndex; i++)
+            {
+                int index = i - startIndex;
+                PlaceObject(_goalObjs[index], points[i]);
+            }
+        }
+
+        private void OnColliderEventHandler(GameObject other)
+        {
+            other.transform.position = GetNextAvailablePosition();
+        }
+
+        private Vector3 GetNextAvailablePosition()
+        {
+            HashSet<int> inavaiablePositions = GetInavaiablePositions();
+            List<Vector3> availablePoints = new List<Vector3>();
+            for (int i = 0; i < _allPositions.Count; i++)
+            {
+                if (!inavaiablePositions.Contains(i))
+                    availablePoints.Add(_allPositions[i]);
+            }
+            if (availablePoints.Count == 0)
+                return Vector3.zero;
+            List<Vector3> points = Algorithm.RandomSample(availablePoints, 1);
+            return points[0];
+        }
+
+        private HashSet<int> GetInavaiablePositions()
+        {
+            HashSet<int> inavaiablePositions = new HashSet<int>
+        {
+            GetHashIndex(_agentObj.transform.position)
+        };
+            for (int i = 0; i < _goalObjs.Count; i++)
+                inavaiablePositions.Add(GetHashIndex(_goalObjs[i].transform.position));
+            for (int i = 0; i < _obstacleObjs.Count; i++)
+                inavaiablePositions.Add(GetHashIndex(_obstacleObjs[i].transform.position));
+            return inavaiablePositions;
+        }
+
+        private int GetHashIndex(Vector3 pos)
+        {
+            return (int)(pos.x * gridSize + pos.z);
+        }
+    }
+}
