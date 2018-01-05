@@ -12,6 +12,7 @@ namespace GridWorld
         private AgentObserver _angetObserver;
         private new void Awake()
         {
+            Application.runInBackground = true;
             base.Awake();
             LoadEnvironment();
             CreateAgentObserverObj();
