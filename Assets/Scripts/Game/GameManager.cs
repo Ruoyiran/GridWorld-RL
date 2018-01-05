@@ -1,11 +1,12 @@
 ﻿using Utils;
 using UnityEngine;
-using System;
+using UnityEngine.UI;
 
 namespace GridWorld
 {
     public class GameManager : SingletonMono<GameManager>
     {
+        public Text scoreText;
         private const string ENVIRONMENT_PREFAB_PATH = "Prefabs/Environment";
         private Environment _env;
         private AgentObserver _angetObserver;
@@ -41,6 +42,7 @@ namespace GridWorld
             if(msg != null)
                 Logger.Print("Reward: {0}", msg.Reward);
 #endif
+            scoreText.text = _env.TotalReward.ToString();
         }
 
         private void LoadEnvironment()

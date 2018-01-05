@@ -9,6 +9,7 @@ namespace GridWorld
         private const string OBSTACLE_PREFAB_PATH = "Prefabs/Pit";
         private const string GOAL_PREFAB_PATH = "Prefabs/Goal";
 
+        public float TotalReward { get; set; }
         public int gridSize = 7;
         public int numObstacles = 3;
         public int numGoals = 3;
@@ -124,6 +125,7 @@ namespace GridWorld
 
         public byte[] Reset()
         {
+            TotalReward = 0;
             int oneAgent = 1;
             int totalPoints = numObstacles + numGoals + oneAgent;
             List<Vector3> points = Algorithm.RandomSample(_allPositions, totalPoints);
@@ -154,9 +156,12 @@ namespace GridWorld
                 default:
                     break;
             }
-            AgentStepMessage msg = new AgentStepMessage();
-            msg.Reward = _agent.CheckReward();
-            msg.IsDone = false;
+            AgentStepMessage msg = new AgentStepMessage
+            {
+                Reward = _agent.CheckReward(),
+                IsDone = false
+            };
+            TotalReward += msg.Reward;
             return msg;
         }
 

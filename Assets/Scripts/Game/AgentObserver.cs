@@ -49,14 +49,12 @@ namespace GridWorld
 
         public override void Reset()
         {
-            Logger.Print("Reset");
             byte[] imageBytes = _env.Reset();
             SendDataBytesToServer(imageBytes);
         }
 
         public override void Step()
         {
-            Logger.Print("Step");
             NotifyServerDataReceived();
             string jsonData = _communicator.ReceiveFromServer();
             AgentMessage message = JsonConvert.DeserializeObject<AgentMessage>(jsonData);
@@ -68,7 +66,6 @@ namespace GridWorld
 
         public override void Quit()
         {
-            Logger.Print("Quit");
             _communicator.Disconnect();
             Application.Quit();
         }
