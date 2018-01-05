@@ -9,7 +9,7 @@ import atexit
 import socket
 import struct
 import json
-from image_utils import process_pixels
+from image_utils import process_pixels, normalize
 CMD_QUIT  = "QUIT"
 CMD_STEP  = "STEP"
 CMD_RESET = "RESET"
@@ -77,15 +77,19 @@ class UnityEnvironment(object):
 
     def reset(self):
         self._send(CMD_RESET)
-        return self._recv_state_image()
+        image = self._recv_state_image()
+        image = normalize(image)
+        return image
 
     def step(self, action):
+        action = int(action)
         self._send(CMD_STEP)
         self._recv_bytes()
         self._send_action(action)
         reward, is_done = self._recv_step_json_data()
-        state = self._recv_state_image()
-        return state, reward, is_done
+        image = self._recv_state_image()
+        image = normalize(image)
+        return image, reward, is_done
 
     def _recv_step_json_data(self):
         json_data = self._recv_bytes_except_header()

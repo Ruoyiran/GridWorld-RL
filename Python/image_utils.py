@@ -13,3 +13,8 @@ def process_pixels(image_bytes=None):
     s = bytearray(image_bytes)
     image = Image.open(io.BytesIO(s))
     return np.array(image)
+
+def normalize(image):
+    mean = np.mean(image)
+    std = np.std(image)
+    return (image - mean) / std
