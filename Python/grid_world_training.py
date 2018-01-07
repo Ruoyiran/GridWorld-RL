@@ -59,15 +59,15 @@ if __name__ == '__main__':
     load_model = False  # Whether to load a saved model.
     input_size = 84 * 84 * 3
     batch_size = 32  # How many experiences to use for each training step.
-    anneling_steps = 100000.  # How many steps of training to reduce startE to endE.
+    anneling_steps = 10000.  # How many steps of training to reduce startE to endE.
     num_episodes = 1000000  # How many episodes of game environment to train network with.
-    pre_train_steps = 50000  # How many steps of random actions before training begins.
+    pre_train_steps = 10000  # How many steps of random actions before training begins.
     path = "./dqn"  # The path to save our model to.
     h_size = 512  # The size of the final convolutional layer before splitting it into Advantage and Value streams.
     tau = 0.001  # Rate to update target network toward primary network
     total_steps = 0
     start_e = 1  # Starting chance of random action
-    end_e = 0.01  # Final chance of random action
+    end_e = 0.1  # Final chance of random action
     e = start_e
     update_freq = 4
     step_drop_e = (start_e - end_e)/anneling_steps
@@ -84,12 +84,12 @@ if __name__ == '__main__':
     mainQN = DeepQNetwork(h_size, 4, learning_rate)
     targetQN = DeepQNetwork(h_size, 4)
     saver = tf.train.Saver()
+    s = env.reset()
     with tf.Session() as sess:
         sess.run(tf.global_variables_initializer())
         update_target(targetOps, sess)
         total_reward = 0
         for i in range(num_episodes+1):
-            s = env.reset()
             if total_steps <= pre_train_steps or np.random.rand(1) < e:
                 a = np.random.randint(0, 4)
             else:
