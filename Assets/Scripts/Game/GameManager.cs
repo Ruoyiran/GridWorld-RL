@@ -38,10 +38,16 @@ namespace GridWorld
             {
                 msg = _env.Step(Action.Down);
             }
-            else if (Input.GetKeyDown(KeyCode.Escape))
+            else if (Input.GetKeyDown(KeyCode.Space))
+            {
                 _env.Reset();
-            if(msg != null)
-                Logger.Print("Reward: {0}", msg.Reward);
+            }
+            if (msg != null)
+            {
+                Logger.Print("Reward: {0} IsDone: {1}", msg.Reward, msg.IsDone);
+                if (msg.IsDone)
+                    _env.Reset();
+            }
 #endif
             scoreText.text = _env.TotalReward.ToString();
         }
