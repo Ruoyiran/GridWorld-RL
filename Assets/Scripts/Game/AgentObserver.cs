@@ -9,10 +9,19 @@ namespace GridWorld
     public class AgentObserver : Observer
     {
         private string _ipAddress = "127.0.0.1";
-        private int _port = 8009;
+        private int _port = 8008;
         private Communicator _communicator;
         private Dictionary<string, Command> _commands;
         private Environment _env;
+        public bool IsConnected
+        {
+            get
+            {
+                if (_communicator != null)
+                    return _communicator.IsConnected;
+                return false;
+            }
+        }
 
         public void SetEnvironment(Environment env)
         {
@@ -66,7 +75,8 @@ namespace GridWorld
 
         public override void Quit()
         {
-            _communicator.Disconnect();
+            if (_communicator != null)
+                _communicator.Disconnect();
             Application.Quit();
         }
 
@@ -85,6 +95,12 @@ namespace GridWorld
         {
             byte[] bytes = Algorithm.AppendLength(data);
             _communicator.SendToServer(bytes);
+        }
+
+        public void Disconnect()
+        {
+            if (_communicator != null)
+                _communicator.Disconnect();
         }
     }
 }

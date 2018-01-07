@@ -50,7 +50,10 @@ namespace GridWorld
         void Start()
         {
 #if ENABLE_TENSORFLOW
-            _tfModel = new TFModel(Path.Combine(Application.streamingAssetsPath, TF_MODEL_PATH));
+            if (File.Exists(Path.Combine(Application.persistentDataPath, TF_MODEL_PATH)))
+                _tfModel = new TFModel(Path.Combine(Application.persistentDataPath, TF_MODEL_PATH));
+            else
+                _tfModel = new TFModel(Path.Combine(Application.streamingAssetsPath, TF_MODEL_PATH));
 #endif
             InitAllPositions();
             InitObjects();

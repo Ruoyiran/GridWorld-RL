@@ -1,4 +1,6 @@
 ﻿using System.IO;
+#if ENABLE_TENSORFLOW
+
 using TensorFlow;
 
 public class TFUtils{
@@ -45,3 +47,4 @@ public class TFUtils{
             y: graph.Const(Scale, "scale")), destinationDataType);
     }
 }
+#endif
