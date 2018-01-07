@@ -1,5 +1,7 @@
 ﻿using System;
 using System.IO;
+
+#if ENABLE_TENSORFLOW
 using TensorFlow;
 
 public class TFModel
@@ -51,3 +53,4 @@ public class TFModel
         return value;
     }
 }
+#endif

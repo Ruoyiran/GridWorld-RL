@@ -42,12 +42,16 @@ namespace GridWorld
         private List<GameObject> _obstacleObjs;
         private Agent _agent;
         private Vector3 _prevAgentPos;
+#if ENABLE_TENSORFLOW
         private TFModel _tfModel;
+#endif
         private const string TF_MODEL_PATH = "Model/graph_def.bytes";
 
         void Start()
         {
+#if ENABLE_TENSORFLOW
             _tfModel = new TFModel(Path.Combine(Application.streamingAssetsPath, TF_MODEL_PATH));
+#endif
             InitAllPositions();
             InitObjects();
             SetEnvironment();
@@ -194,6 +198,7 @@ namespace GridWorld
             return msg;
         }
 
+#if ENABLE_TENSORFLOW
         public void AIStep()
         {
             if (_tfModel == null)
@@ -201,6 +206,7 @@ namespace GridWorld
             int action = GetAIAction();
             Logger.Print("Action: {0}", action);
             Step((Action)action);
+
         }
 
         private int GetAIAction()
@@ -211,6 +217,7 @@ namespace GridWorld
             int action = GetMaxValueIndex(qout);
             return action;
         }
+#endif
 
         private int GetMaxValueIndex(float[,] input)
         {

@@ -64,7 +64,9 @@ namespace GridWorld
             }
             else if (Input.GetKeyDown(KeyCode.Tab))
             {
+#if ENABLE_TENSORFLOW
                 _env.AIStep();
+#endif
             }
             if (msg != null)
             {
@@ -73,7 +75,7 @@ namespace GridWorld
                     _env.ResetEnv();
             }
 #endif
-            scoreText.text = _env.TotalReward.ToString();
+                scoreText.text = _env.TotalReward.ToString();
         }
 
         private void LoadEnvironment()
@@ -143,7 +145,9 @@ namespace GridWorld
         {
             while (true)
             {
+#if ENABLE_TENSORFLOW
                 _env.AIStep();
+#endif
                 yield return new WaitForSeconds(0.5f);
             }
         }
