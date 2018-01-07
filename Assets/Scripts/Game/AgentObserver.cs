@@ -9,7 +9,7 @@ namespace GridWorld
     public class AgentObserver : Observer
     {
         private string _ipAddress = "127.0.0.1";
-        private int _port = 8008;
+        private int _port = 8009;
         private Communicator _communicator;
         private Dictionary<string, Command> _commands;
         private Environment _env;

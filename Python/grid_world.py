@@ -5,15 +5,15 @@
 @file: grid_world.py
 @time: 2018/1/5 16:01
 '''
+import os
 import numpy as np
 import random
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
-import os
 from unity_environment import UnityEnvironment
 
 class Qnetwork():
-    def __init__(self, h_size, actions):
+    def __init__(self, h_size, actions, learning_rate=1e-6):
         # The network recieves a frame from the game, flattened into an array.
         # It then resizes it and processes it through four convolutional layers.
         self.scalarInput = tf.placeholder(shape=[None, 21168], dtype=tf.float32)
@@ -52,7 +52,7 @@ class Qnetwork():
 
         self.td_error = tf.square(self.targetQ - self.Q)
         self.loss = tf.reduce_mean(self.td_error)
-        self.trainer = tf.train.AdamOptimizer(learning_rate=0.0001)
+        self.trainer = tf.train.AdamOptimizer(learning_rate=learning_rate)
         self.updateModel = self.trainer.minimize(self.loss)
 
 
@@ -83,22 +83,21 @@ def updateTarget(op_holder,sess):
     for op in op_holder:
         sess.run(op)
 
-
 if __name__ == '__main__':
     batch_size = 32  # How many experiences to use for each training step.
     update_freq = 4  # How often to perform a training step.
     y = .99  # Discount factor on the target Q-values
     startE = 1  # Starting chance of random action
-    endE = 0.1  # Final chance of random action
+    endE = 0.01  # Final chance of random action
     anneling_steps = 10000.  # How many steps of training to reduce startE to endE.
-    num_episodes = 10000  # How many episodes of game environment to train network with.
+    num_episodes = 1000000  # How many episodes of game environment to train network with.
     pre_train_steps = 10000  # How many steps of random actions before training begins.
     max_epLength = 50  # The max allowed length of our episode.
     load_model = False  # Whether to load a saved model.
-    path = "./dqn"  # The path to save our model to.
+    path = "./dqn2"  # The path to save our model to.
     h_size = 512  # The size of the final convolutional layer before splitting it into Advantage and Value streams.
     tau = 0.001  # Rate to update target network toward primary network
-    env = UnityEnvironment()
+    env = UnityEnvironment(address="127.0.0.1", port=8009)
 
     tf.reset_default_graph()
     mainQN = Qnetwork(h_size, 4)
@@ -119,7 +118,6 @@ if __name__ == '__main__':
     stepDrop = (startE - endE) / anneling_steps
 
     # create lists to contain total rewards and steps per episode
-    jList = []
     rList = []
     total_steps = 0
 
@@ -129,65 +127,61 @@ if __name__ == '__main__':
 
     with tf.Session() as sess:
         sess.run(init)
-        if load_model == True:
+        if load_model is True:
             print('Loading Model...')
             ckpt = tf.train.get_checkpoint_state(path)
             saver.restore(sess, ckpt.model_checkpoint_path)
         updateTarget(targetOps, sess)  # Set the target network to be equal to the primary network.
+        s = env.reset()
+        rAll = 0
         for i in range(num_episodes):
             episodeBuffer = experience_buffer()
             # Reset environment and get first new observation
-            s = env.reset()
             s = processState(s)
             d = False
-            rAll = 0
             j = 0
             # The Q-Network
-            while j < max_epLength:  # If the agent takes longer than 200 moves to reach either of the blocks, end the trial.
-                j += 1
-                # Choose an action by greedily (with e chance of random action) from the Q-network
-                if np.random.rand(1) < e or total_steps < pre_train_steps:
-                    a = np.random.randint(0, 4)
-                else:
-                    a = sess.run(mainQN.predict, feed_dict={mainQN.scalarInput: [s]})[0]
-                s1, r, d = env.step(a)
-                s1 = processState(s1)
-                total_steps += 1
-                episodeBuffer.add(
-                    np.reshape(np.array([s, a, r, s1, d]), [1, 5]))  # Save the experience to our episode buffer.
+            # while j < max_epLength:  # If the agent takes longer than 200 moves to reach either of the blocks, end the trial.
+            #     j += 1
+            # Choose an action by greedily (with e chance of random action) from the Q-network
+            if np.random.rand(1) < e or total_steps < pre_train_steps:
+                a = np.random.randint(0, 4)
+            else:
+                a = sess.run(mainQN.predict, feed_dict={mainQN.scalarInput: [s]})[0]
+            s1, r, d = env.step(a)
+            s1 = processState(s1)
+            total_steps += 1
+            myBuffer.add(np.reshape(np.array([s, a, r, s1, d]), [1, 5]))  # Save the experience to our episode buffer.
+            rAll += r
+            if total_steps > pre_train_steps:
+                if e > endE:
+                    e -= stepDrop
+                if len(myBuffer.buffer) >= batch_size and total_steps % update_freq == 0:
+                    trainBatch = myBuffer.sample(batch_size)  # Get a random batch of experiences.
+                    # Below we perform the Double-DQN update to the target Q-values
+                    Q1 = sess.run(mainQN.predict, feed_dict={mainQN.scalarInput: np.vstack(trainBatch[:, 3])})
+                    Q2 = sess.run(targetQN.Qout, feed_dict={targetQN.scalarInput: np.vstack(trainBatch[:, 3])})
+                    end_multiplier = -(trainBatch[:, 4] - 1)
+                    doubleQ = Q2[range(batch_size), Q1]
+                    targetQ = trainBatch[:, 2] + (y * doubleQ * end_multiplier)
+                    # Update the network with our target values.
+                    _ = sess.run(mainQN.updateModel,
+                                 feed_dict={mainQN.scalarInput: np.vstack(trainBatch[:, 0]),
+                                            mainQN.targetQ: targetQ, mainQN.actions: trainBatch[:, 1]})
 
-                if total_steps > pre_train_steps:
-                    if e > endE:
-                        e -= stepDrop
+                    updateTarget(targetOps, sess)  # Set the target network to be equal to the primary network.
 
-                    if total_steps % (update_freq) == 0:
-                        trainBatch = myBuffer.sample(batch_size)  # Get a random batch of experiences.
-                        # Below we perform the Double-DQN update to the target Q-values
-                        Q1 = sess.run(mainQN.predict, feed_dict={mainQN.scalarInput: np.vstack(trainBatch[:, 3])})
-                        Q2 = sess.run(targetQN.Qout, feed_dict={targetQN.scalarInput: np.vstack(trainBatch[:, 3])})
-                        end_multiplier = -(trainBatch[:, 4] - 1)
-                        doubleQ = Q2[range(batch_size), Q1]
-                        targetQ = trainBatch[:, 2] + (y * doubleQ * end_multiplier)
-                        # Update the network with our target values.
-                        _ = sess.run(mainQN.updateModel,
-                                     feed_dict={mainQN.scalarInput: np.vstack(trainBatch[:, 0]),
-                                                mainQN.targetQ: targetQ, mainQN.actions: trainBatch[:, 1]})
-
-                        updateTarget(targetOps, sess)  # Set the target network to be equal to the primary network.
-                rAll += r
                 s = s1
+            if d is True:
+                rList.append(rAll)
+                rAll = 0
+                s = env.reset()
 
-                if d == True:
-                    break
-
-            myBuffer.add(episodeBuffer.buffer)
-            jList.append(j)
-            rList.append(rAll)
             # Periodically save the model.
             if i % 1000 == 0:
                 saver.save(sess, path + '/model-' + str(i) + '.cptk')
                 print("Saved Model")
-            if len(rList) % 10 == 0:
+            if len(rList) > 0 and len(rList) % 10 == 0:
                 print(total_steps, np.mean(rList[-10:]), e)
         saver.save(sess, path + '/model-' + str(i) + '.cptk')
     print("Percent of succesful episodes: " + str(sum(rList) / num_episodes) + "%")

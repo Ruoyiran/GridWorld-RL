@@ -5,14 +5,28 @@ namespace GridWorld
 {
     public class Environment : MonoBehaviour
     {
+        private struct InnerState
+        {
+            public float reward;
+            public bool isDone;
+            public GameObject colliderObj;
+            public InnerState(float reward = 0.0f, bool isDone = false, GameObject colliderObj = null)
+            {
+                this.reward = reward;
+                this.isDone = isDone;
+                this.colliderObj = colliderObj;
+            }
+        }
         private const string AGENT_PREFAB_PATH = "Prefabs/Agent";
         private const string OBSTACLE_PREFAB_PATH = "Prefabs/Pit";
         private const string GOAL_PREFAB_PATH = "Prefabs/Goal";
 
         public float TotalReward { get; set; }
-        public int gridSize = 7;
-        public int numObstacles = 3;
-        public int numGoals = 3;
+        public static int gridSize = 7;
+        public int numObstacles = 5;
+        public int numGoals = 1;
+        public int maxSteps = gridSize * gridSize;
+        private int _currMoveSteps = 0;
         private int _envImageWidth = 84;
         private int _envImageHeight = 84;
         private Camera _envCamera;
@@ -26,14 +40,12 @@ namespace GridWorld
         private List<GameObject> _goalObjs;
         private List<GameObject> _obstacleObjs;
         private Agent _agent;
-
+        private Vector3 _prevAgentPos;
         void Start()
         {
             InitAllPositions();
             InitObjects();
             SetEnvironment();
-            if (_agent != null)
-                _agent.OnColliderEvent += OnColliderEventHandler;
         }
 
         private void InitAllPositions()
@@ -126,12 +138,14 @@ namespace GridWorld
         public byte[] Reset()
         {
             TotalReward = 0;
+            _currMoveSteps = 0;
             int oneAgent = 1;
             int totalPoints = numObstacles + numGoals + oneAgent;
             List<Vector3> points = Algorithm.RandomSample(_allPositions, totalPoints);
             PlaceObject(_agentObj, points[0]);
             PlaceObstacles(points, oneAgent, oneAgent + numObstacles);
             PlaceGoals(points, oneAgent + numObstacles, points.Count);
+            _prevAgentPos = _agentObj.transform.position;
             return GetEnvironmentImageBytes();
         }
 
@@ -156,13 +170,58 @@ namespace GridWorld
                 default:
                     break;
             }
+            _currMoveSteps += 1;
+            InnerState state = GetCurrentState();
             AgentStepMessage msg = new AgentStepMessage
             {
-                Reward = _agent.CheckReward(),
-                IsDone = false
+                Reward = state.reward,
+                IsDone = state.isDone
             };
             TotalReward += msg.Reward;
+            _prevAgentPos = _agent.transform.position;
+            ClearColliderObj(state.colliderObj);
             return msg;
+        }
+
+        private InnerState GetCurrentState()
+        {
+            InnerState state = new InnerState();
+            Collider[] colliders = Physics.OverlapBox(new Vector3(_agentObj.transform.position.x, 0, _agentObj.transform.position.z), new Vector3(0.3f, 0.3f, 0.3f));
+            for (int i = 0; i < colliders.Length; i++)
+            {
+                GameObject obj = colliders[i].gameObject;
+                if (obj != _agentObj)
+                {
+                    state.colliderObj = obj;
+                    if (obj.CompareTag("Goal"))
+                    {
+                        state.reward = 10.1f;
+                        state.isDone = false;
+                        _currMoveSteps = 0;
+                        return state;
+                    }
+                    else if (obj.CompareTag("Pit"))
+                    {
+                        state.reward = -10.0f;
+                        state.isDone = true;
+                        return state;
+                    }
+                }
+            }
+            
+            float prevDist = Vector3.Distance(_prevAgentPos, _goalObjs[0].transform.position);
+            float currDist = Vector3.Distance(_agentObj.transform.position, _goalObjs[0].transform.position);
+            state.reward = currDist < prevDist ? 0.1f : -0.1f;
+            state.isDone = _currMoveSteps >= maxSteps ? true : false;
+            state.colliderObj = null;
+            return state;
+        }
+
+        private void ClearColliderObj(GameObject colliderObj)
+        {
+            if (colliderObj == null)
+                return;
+            colliderObj.transform.position = GetNextAvailablePosition();
         }
 
         public byte[] GetEnvironmentImageBytes()

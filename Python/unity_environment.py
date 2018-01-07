@@ -36,6 +36,7 @@ class UnityEnvironment(object):
 
     def _listening(self):
         try:
+            print("Waiting connect...")
             self._socket.listen(1)
             self._conn, _ = self._socket.accept()
         except socket.timeout as e:
