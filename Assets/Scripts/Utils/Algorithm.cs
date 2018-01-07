@@ -1,8 +1,9 @@
 ﻿
+using System;
 using System.Collections.Generic;
 
 public class Algorithm {
-    private static System.Random random = new System.Random();
+    private static Random random = new Random();
 
     public static List<T> RandomSample<T>(List<T> dataList, int count)
     {
@@ -39,5 +40,22 @@ public class Algorithm {
         input.CopyTo(newArray, 4);
         System.BitConverter.GetBytes(input.Length).CopyTo(newArray, 0);
         return newArray;
+    }
+
+    public static int ArgMax<T>(T[] input) where T : IComparable
+    {
+        if (input == null || input.Length == 0)
+            return -1;
+        int maxIndex = 0;
+        T maxValue = input[0];
+        for (int i = 1; i < input.Length; i++)
+        {
+            if (input[i].CompareTo(maxValue) > 0)
+            {
+                maxValue = input[i];
+                maxIndex = i;
+            }
+        }
+        return maxIndex;
     }
 }

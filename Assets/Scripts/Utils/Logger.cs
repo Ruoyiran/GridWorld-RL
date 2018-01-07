@@ -1,6 +1,11 @@
 ﻿using UnityEngine;
 
 public class Logger {
+    public static void Print(object msg)
+    {
+        Debug.Log(msg);
+    }
+
     public static void Print(string format, params object[] args)
     {
         string log = string.Format(format, args);

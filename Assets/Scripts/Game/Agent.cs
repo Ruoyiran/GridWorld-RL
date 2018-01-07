@@ -12,11 +12,6 @@ namespace GridWorld
 
     public class Agent : MonoBehaviour
     {
-        public delegate void ColliderEvent(GameObject other);
-        public event ColliderEvent OnColliderEvent;
-
-        private float _reward = 0f;
-
         public void MoveUp()
         {
             transform.position = new Vector3(transform.position.x, transform.position.y, transform.position.z + 1);

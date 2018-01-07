@@ -2,7 +2,7 @@
 using System.IO;
 
 public class ImageTool {
-    public void SaveTexture2DToFile(Texture2D tex, string path)
+    public static void SaveTexture2DToFile(Texture2D tex, string path)
     {
         byte[] bytes = tex.EncodeToPNG();
         File.WriteAllBytes(path, bytes);

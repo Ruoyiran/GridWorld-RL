@@ -15,6 +15,4 @@ def process_pixels(image_bytes=None):
     return np.array(image)
 
 def normalize(image):
-    mean = np.mean(image)
-    std = np.std(image)
-    return (image - mean) / std
+    return image/255.0

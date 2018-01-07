@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using UnityEngine;
 namespace GridWorld
 {
@@ -29,7 +30,7 @@ namespace GridWorld
         private int _currMoveSteps = 0;
         private int _envImageWidth = 84;
         private int _envImageHeight = 84;
-        private Camera _envCamera;
+        public Camera _envCamera;
         private GameObject _agentObj;
         private GameObject _planeObj;
         private GameObject _eastWallObj;
@@ -41,11 +42,16 @@ namespace GridWorld
         private List<GameObject> _obstacleObjs;
         private Agent _agent;
         private Vector3 _prevAgentPos;
+        private TFModel _tfModel;
+        private const string TF_MODEL_PATH = "Model/graph_def.bytes";
+
         void Start()
         {
+            _tfModel = new TFModel(Path.Combine(Application.streamingAssetsPath, TF_MODEL_PATH));
             InitAllPositions();
             InitObjects();
             SetEnvironment();
+            ResetEnv();
         }
 
         private void InitAllPositions()
@@ -137,6 +143,12 @@ namespace GridWorld
 
         public byte[] Reset()
         {
+            ResetEnv();
+            return GetEnvironmentImageBytes();
+        }
+
+        public void ResetEnv()
+        {
             TotalReward = 0;
             _currMoveSteps = 0;
             int oneAgent = 1;
@@ -146,7 +158,6 @@ namespace GridWorld
             PlaceObstacles(points, oneAgent, oneAgent + numObstacles);
             PlaceGoals(points, oneAgent + numObstacles, points.Count);
             _prevAgentPos = _agentObj.transform.position;
-            return GetEnvironmentImageBytes();
         }
 
         public AgentStepMessage Step(Action action)
@@ -181,6 +192,41 @@ namespace GridWorld
             _prevAgentPos = _agent.transform.position;
             ClearColliderObj(state.colliderObj);
             return msg;
+        }
+
+        public void AIStep()
+        {
+            if (_tfModel == null)
+                return;
+            int action = GetAIAction();
+            Logger.Print("Action: {0}", action);
+            Step((Action)action);
+        }
+
+        private int GetAIAction()
+        {
+            Texture2D tex = ImageTool.RenderToTex(_envCamera, _envImageWidth, _envImageHeight);
+            byte[] bytes = tex.EncodeToPNG();
+            float[,] qout = _tfModel.GetValue("Input", "Qout", bytes);
+            int action = GetMaxValueIndex(qout);
+            return action;
+        }
+
+        private int GetMaxValueIndex(float[,] input)
+        {
+            if (input == null)
+                return 0;
+            float max = input[0, 0];
+            int index = 0;
+            for (int i = 1; i < 4; i++)
+            {
+                if (input[0, i] > max)
+                {
+                    max = input[0, i];
+                    index = i;
+                }
+            }
+            return index;
         }
 
         private InnerState GetCurrentState()
