@@ -24,8 +24,8 @@ namespace GridWorld
 
         public float TotalReward { get; set; }
         public static int gridSize = 7;
-        public int numObstacles = 5;
-        public int numGoals = 1;
+        public int numObstacles = 20;
+        public int numGoals = 20;
         public int maxSteps = gridSize * gridSize;
         private int _currMoveSteps = 0;
         private int _envImageWidth = 84;
@@ -251,24 +251,27 @@ namespace GridWorld
                     state.colliderObj = obj;
                     if (obj.CompareTag("Goal"))
                     {
-                        state.reward = 10.1f;
+                        //state.reward = 10.1f;
                         state.isDone = false;
                         _currMoveSteps = 0;
+                        state.reward = 10.0f;
                         return state;
                     }
                     else if (obj.CompareTag("Pit"))
                     {
+                        //state.reward = -10.0f;
                         state.reward = -10.0f;
-                        state.isDone = true;
+                        state.isDone = false;
                         return state;
                     }
                 }
             }
             
-            float prevDist = Vector3.Distance(_prevAgentPos, _goalObjs[0].transform.position);
-            float currDist = Vector3.Distance(_agentObj.transform.position, _goalObjs[0].transform.position);
-            state.reward = currDist < prevDist ? 0.1f : -0.1f;
-            state.isDone = _currMoveSteps >= maxSteps ? true : false;
+            //float prevDist = Vector3.Distance(_prevAgentPos, _goalObjs[0].transform.position);
+            //float currDist = Vector3.Distance(_agentObj.transform.position, _goalObjs[0].transform.position);
+            state.reward = -0.1f;// currDist < prevDist ? 0.1f : -0.1f;
+            //state.isDone = _currMoveSteps >= maxSteps ? true : false;
+            state.isDone = false;
             state.colliderObj = null;
             return state;
         }

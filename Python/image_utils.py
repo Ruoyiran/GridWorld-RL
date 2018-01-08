@@ -6,8 +6,8 @@
 @time: 2018/1/4
 """
 import io
-import numpy as np
 from PIL import Image
+import numpy as np
 
 def process_pixels(image_bytes=None):
     s = bytearray(image_bytes)
