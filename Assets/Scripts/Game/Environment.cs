@@ -24,8 +24,8 @@ namespace GridWorld
 
         public float TotalReward { get; set; }
         public static int gridSize = 7;
-        public int numObstacles = 20;
-        public int numGoals = 20;
+        public int numObstacles = 3;
+        public int numGoals = 3;
         public int maxSteps = gridSize * gridSize;
         private int _currMoveSteps = 0;
         private int _envImageWidth = 84;
